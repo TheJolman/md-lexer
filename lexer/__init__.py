@@ -1,2 +1,2 @@
-from .core import lexer
-__all__ = ['lexer']
+from .core import Lexer
+__all__ = ['Lexer']

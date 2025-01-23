@@ -1,5 +1,5 @@
 import sys
-import lexer as lex
+from lexer import Lexer
 
 def main():
     if len(sys.argv) != 2:
@@ -16,7 +16,9 @@ def main():
     print(f"You entered: {filename}")
 
     try:
-        lex.lexer(filename)
+        lexer = Lexer()
+        lexer.read(filename)
+        lexer.emit_token()
     except Exception as e:
         print(f"Error parsing file: {str(e)}")
 
