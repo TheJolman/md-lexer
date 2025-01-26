@@ -1,43 +1,6 @@
-import pdb
-from enum import Enum, auto
-
-
-class TokenType(Enum):
-    """Tokens belonging to the markdown markup language"""
-
-    DOT = auto()
-    STAR = auto()
-    STAR_2 = auto()
-    STAR_3 = auto()
-    UNDERSCORE = auto()
-    DASH = auto()
-    GREATER = auto()
-    PIPE = auto()
-    BACKSLASH = auto()
-    HASH = auto()
-    HASH_2 = auto()
-    HASH_3 = auto()
-    HASH_4 = auto()
-    TEXT = auto()
-    SPACE = auto()
-    SPACE_SPACE = auto()
-    NEWLINE = auto()
-
-
-class Token:
-    """Represents a single token in the markdown text"""
-
-    def __init__(self, type: TokenType, lexeme: str, line: int, column: int):
-        self.type = type
-        self.lexeme = lexeme
-        self.line = line
-        self.column = column
-
-    def __str__(self) -> str:
-        return f"Token({self.type.name}, '{self.lexeme}', line={self.line}, col={self.column})"
-
-    def __repr__(self) -> str:
-        return self.__str__()
+# import pdb
+from .token import Token
+from .token_type import TokenType
 
 
 class LexerError(Exception):
