@@ -1,5 +1,7 @@
 import sys
+
 from lexer import Lexer
+
 
 def main():
     if len(sys.argv) != 2:
@@ -9,7 +11,7 @@ def main():
 
     filename = sys.argv[1]
 
-    if not filename.endswith('.md') or len(filename) < 4:
+    if not filename.endswith(".md") or len(filename) < 4:
         print("Error: Invalid markdown filename")
         sys.exit(1)
 
@@ -21,10 +23,6 @@ def main():
         lexer.emit_token()
     except Exception as e:
         print(f"Error parsing file: {str(e)}")
-
-
-
-
 
 
 if __name__ == "__main__":
