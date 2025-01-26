@@ -1,2 +1,5 @@
-### this is an h3
-## this is an h2
+### h3
+
+**bold**
+
+***bold & italic***

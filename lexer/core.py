@@ -24,28 +24,72 @@ class TokenType(Enum):
     NEWLINE = auto()
 
 
+class Token:
+    """Represents a single token in the markdown text"""
+
+    def __init__(self, type: TokenType, lexeme: str, line: int, column: int):
+        self.type = type
+        self.lexeme = lexeme
+        self.line = line
+        self.column = column
+
+    def __str__(self) -> str:
+        return f"Token({self.type.name}, '{self.lexeme}', line={self.line}, col={self.column})"
+
+    def __repr__(self) -> str:
+        return self.__str__()
+
+
+class LexerError(Exception):
+    """Custom exception for Lexer errors"""
+
+    pass
+
+
 class Lexer:
     def __init__(self):
-        pass
+        self.position = 0
+        self.line = 1
+        self.column = 0
+        self.content = ""
+        self.token_width = 1
 
     def read(self, filename: str):
-        self.position = 0
-        self.content: str
-        with open(filename, "r") as file:
-            self.content = file.read()
+        """Read content from file
+        Raises:
+            LexerError: If file cannot be read or is empty
+        """
+        try:
+            with open(filename, "r") as file:
+                self.content = file.read()
+                if not self.content:
+                    raise LexerError(f"File '{filename}' is empty")
+            self.position = 0
+            self.line = 1
+            self.column = 0
+
+        except FileNotFoundError:
+            raise LexerError(f"File '{filename}' not found")
+        except Exception as e:
+            raise LexerError(f"Error reading file '{filename}': {str(e)}")
 
     def _scan_token(self) -> TokenType:
         token = self._advance()
+        self.token_width = 1
         match token:
             case ".":
                 return TokenType.DOT
             case "*":
-                match self._match_sequence("*", 3):
+                num_stars = self._match_sequence("*", 3)
+                self.token_width = num_stars
+                match num_stars:
                     case 3:
                         self.position += 2
+                        self.token_width = 3
                         return TokenType.STAR_3
                     case 2:
                         self.position += 1
+                        self.token_width = 2
                         return TokenType.STAR_2
                     case _:
                         return TokenType.STAR
@@ -60,15 +104,15 @@ class Lexer:
             case "\\":
                 return TokenType.BACKSLASH
             case "#":
-                match self._match_sequence("#", 4):
+                num_hashes = self._match_sequence("#", 4)
+                self.token_width = num_hashes
+                self._advance(num_hashes - 1)
+                match num_hashes:
                     case 4:
-                        self.position += 3
                         return TokenType.HASH_4
                     case 3:
-                        self.position += 2
                         return TokenType.HASH_3
                     case 2:
-                        self.position += 1
                         return TokenType.HASH_2
                     case _:
                         return TokenType.HASH
@@ -79,10 +123,25 @@ class Lexer:
             case _:
                 return TokenType.TEXT
 
-    def _advance(self) -> str:
-        """Returns current token and advances position by 1"""
+    def _advance(self, offset: int = 1) -> str:
+        """Returns current token and advances position by offset (default 1)"""
+
+        if offset < 0:
+            raise LexerError("Error: _advance expects an offset >= 0")
+
         current = self.content[self.position]
+
+        if offset == 0:
+            return current
+
         self.position += 1
+
+        for i in range(offset):
+            if current == "\n":
+                self.line += 1
+                self.column = 0
+            else:
+                self.column += 1
         return current
 
     def _peek(self, offset: int = 1) -> str | None:
@@ -117,7 +176,17 @@ class Lexer:
         return self.position + offset >= len(self.content)
 
     def emit_token(self):
+        """Prints tokens with positional information"""
         while not self._is_at_end():
-            char = self.content[self.position]
-            token = self._scan_token()
-            print(char, token.name)
+            start_col = self.column
+
+            # First get the token type - this will set token_width
+            token_type = self._scan_token()
+
+            # Get the actual lexeme using the determined width
+            lexeme = self.content[self.position - self.token_width : self.position]
+
+            token = Token(
+                type=token_type, lexeme=lexeme, line=self.line, column=start_col
+            )
+            print(token)
